@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{4d630c80-4f54-4e3c-b54d-140c983c80f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\Hooks">
+      <UniqueIdentifier>{4be1545e-272d-4005-bc38-238eafe5012d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Core\ImGui">
+      <UniqueIdentifier>{dab939a9-098f-42e3-a09a-94156ec6cbac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detour">
+      <UniqueIdentifier>{75d5c364-6944-449f-888d-444c6d4234ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detour\Include">
+      <UniqueIdentifier>{6d3b9ad2-5930-4567-a0f7-c1f00ab6c027}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detour\Libs">
+      <UniqueIdentifier>{2e580220-24b5-4c44-a0b8-97ccdc2ddc99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detour\Libs\x64">
+      <UniqueIdentifier>{d63cf869-be12-413c-bf41-fc77f24ef233}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Detour\Libs\x86">
+      <UniqueIdentifier>{4646d0b4-5a3b-4b03-934b-8cf5dff87a5d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Core\Hooks\Hooks.cpp">
+      <Filter>Core\Hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui_demo.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui_draw.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui_impl_dx11.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui_impl_win32.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui_tables.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="Core\ImGui\imgui_widgets.cpp">
+      <Filter>Core\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Core\Hooks\Hooks.h">
+      <Filter>Core\Hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imconfig.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imgui.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imgui_impl_dx11.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imgui_impl_win32.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imgui_internal.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imstb_rectpack.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imstb_textedit.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\ImGui\imstb_truetype.h">
+      <Filter>Core\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Includes.h" />
+    <ClInclude Include="Detours\Include\detours.h">
+      <Filter>Detour\Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Detours\Lib\x64\detours.lib" />
+    <Library Include="Detours\Lib\x86\detours.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Detours\Lib\x64\detours.pdb" />
+    <None Include="Detours\Lib\x86\detours.pdb" />
+  </ItemGroup>
+</Project>
