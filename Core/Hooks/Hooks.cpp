@@ -21,8 +21,10 @@ namespace direct_x_11_base
 
 	//Note: Those Offsets might break after Windows Updates so be prepare to update those manually or find a way to automaticly update them, since signatures also break easily
 	const static std::uintptr_t g_dxgi_base_address = reinterpret_cast<std::uintptr_t>(GetModuleHandleA("dxgi.dll"));
-	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0; //sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
-	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40; //sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
+	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0;
+	//sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
+	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40;
+	//sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
 
 	std::string DXGI_IMAGE_BASE_CONSOLE_TEXT = "dxgi.dll Imagebase: ";
 	std::string IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT = "IDXGISwapChain::Present: ";
@@ -30,7 +32,7 @@ namespace direct_x_11_base
 	std::string DEVICE_CONSOLE_TEXT = "Device: ";
 	std::string CONTEXT_CONSOLE_TEXT = "Context: ";
 	std::string FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT = "Failed to get back_buffer";
-	std::string FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT= "Failed to get RenderTarget";
+	std::string FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT = "Failed to get RenderTarget";
 
 	//Variable for wnd proc hook
 	WNDPROC o_wnd_proc_handler = nullptr;
@@ -87,15 +89,20 @@ namespace direct_x_11_base
 
 	// This is a macro that calculates a depth bias value for DirectX 32-bit floating-point format.
 	// It's used to convert depth bias from a float to a format compatible with DXGI.
-	#define DEPTH_BIAS_D32_FLOAT(d) (d/(1/pow(2,23)))
-	
+#define DEPTH_BIAS_D32_FLOAT(d) (d/(1/pow(2,23)))
+
 	// int64_t __fastcall IDXGISwapChain_Present(IDXGISwapChain* this, unsigned int SyncInterval, unsigned int Flags)
-	using tIDXGISwapChain_Present = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int SyncInterval,unsigned int Flags);
-	tIDXGISwapChain_Present o_IDXGISwapChain_Present = reinterpret_cast<tIDXGISwapChain_Present>(g_offset_IDXGISwapChain_Present);
+	using tIDXGISwapChain_Present = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int SyncInterval,
+	                                                     unsigned int Flags);
+	tIDXGISwapChain_Present o_IDXGISwapChain_Present = reinterpret_cast<tIDXGISwapChain_Present>(
+		g_offset_IDXGISwapChain_Present);
 
 	// int64_t __fastcall IDXGISwapChain::ResizeBuffers(IDXGISwapChain* this, unsigned int BufferCount, unsigned int Width, unsigned int Height, DXGI_FORMAT NewFormat, unsigned int SwapChainFlags)
-	using tIDXGISwapChain_ResizeBuffers = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int BufferCount,unsigned int Width, unsigned int Height,DXGI_FORMAT NewFormat, unsigned int SwapChainFlags);
-	tIDXGISwapChain_ResizeBuffers o_IDXGISwapChain_ResizeBuffers = reinterpret_cast<tIDXGISwapChain_ResizeBuffers>(g_offset_IDXGISwapChain_ResizeBuffers);
+	using tIDXGISwapChain_ResizeBuffers = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int BufferCount,
+	                                                           unsigned int Width, unsigned int Height,
+	                                                           DXGI_FORMAT NewFormat, unsigned int SwapChainFlags);
+	tIDXGISwapChain_ResizeBuffers o_IDXGISwapChain_ResizeBuffers = reinterpret_cast<tIDXGISwapChain_ResizeBuffers>(
+		g_offset_IDXGISwapChain_ResizeBuffers);
 
 	// Universal Wnd Process hook, should stop most game of draging your mouse to the middle of the screen or transmit keystrokes to the gamme
 	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND h_wnd, const UINT u_msg, const WPARAM w_param, const LPARAM l_param)
@@ -114,7 +121,7 @@ namespace direct_x_11_base
 
 		// Update the ImGui mouse cursor position based on the converted client coordinates
 		ImGui::GetIO().MousePos.x = m_pos.x;
-		ImGui::GetIO().MousePos.y = m_pos.y;		
+		ImGui::GetIO().MousePos.y = m_pos.y;
 
 		// Check if ImGui wants to handle the Windows message (UI input)
 		if (ImGui_ImplWin32_WndProcHandler(h_wnd, u_msg, w_param, l_param))
@@ -134,7 +141,11 @@ namespace direct_x_11_base
 		return CallWindowProc(o_wnd_proc_handler, h_wnd, u_msg, w_param, l_param);
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* this_ptr, const unsigned int buffer_count, const unsigned int width, const unsigned int height,const DXGI_FORMAT new_format, const unsigned int swap_chain_flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* this_ptr,
+	                                                             const unsigned int buffer_count,
+	                                                             const unsigned int width, const unsigned int height,
+	                                                             const DXGI_FORMAT new_format,
+	                                                             const unsigned int swap_chain_flags)
 	{
 		// Invalidate ImGui's device objects to prepare for resizing
 		ImGui_ImplDX11_InvalidateDeviceObjects();
@@ -147,33 +158,36 @@ namespace direct_x_11_base
 		}
 
 		// Call the original IDXGISwapChain::ResizeBuffers function and store its return value
-		const int64_t r_result = o_IDXGISwapChain_ResizeBuffers(this_ptr, buffer_count, width, height, new_format, swap_chain_flags);
+		const int64_t r_result = o_IDXGISwapChain_ResizeBuffers(this_ptr, buffer_count, width, height, new_format,
+		                                                        swap_chain_flags);
 
 		// Recreate ImGui's device objects after resizing
 		ImGui_ImplDX11_CreateDeviceObjects();
 
 		// Return the result of the original IDXGISwapChain::ResizeBuffers
 		return r_result;
-
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval, const unsigned int flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval,
+	                                                      const unsigned int flags)
 	{
 		// Check if ImGui is initialized
 		if (!g_is_imgui_initialized)
 		{
-			g_is_imgui_initialized = true;  // Only initialize ImGui once
+			g_is_imgui_initialized = true; // Only initialize ImGui once
 
 			// Get the device associated with the swap chain
 			if (SUCCEEDED(this_ptr->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_ptr_device))))
 			{
 				// Gets the device pointer of the swap chain for later usage
 				this_ptr->GetDevice(__uuidof(g_ptr_device), reinterpret_cast<void**>(&g_ptr_device));
-				std::cout << DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_device)) << std::endl;
+				std::cout << DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_device))
+					<< std::endl;
 
 				//Get pointer of te context of the swap chain
 				g_ptr_device->GetImmediateContext(&g_ptr_context);
-				std::cout << CONTEXT_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_context)) << std::endl;
+				std::cout << CONTEXT_CONSOLE_TEXT << std::format(
+					"{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_context)) << std::endl;
 			}
 
 			// Create an ImGui context
@@ -192,7 +206,8 @@ namespace direct_x_11_base
 			g_window = swap_chain_desc.OutputWindow;
 
 			// Set a custom window procedure handler for ImGui
-			o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
+			o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+				g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
 
 			// Initialize ImGui for Win and DirectX 11
 			ImGui_ImplWin32_Init(g_window);
@@ -265,10 +280,11 @@ namespace direct_x_11_base
 
 			// Gets the back buffer for rendering
 			ID3D11Texture2D* back_buffer = nullptr;
-			g_h_result_code = this_ptr->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
+			g_h_result_code = this_ptr->
+				GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
 			if (FAILED(g_h_result_code))
 			{
-				printf("%s\n",FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
+				printf("%s\n", FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
 				return g_h_result_code;
 			}
 
@@ -281,8 +297,8 @@ namespace direct_x_11_base
 				return g_h_result_code;
 			}
 		}
-		else 
-		{ 
+		else
+		{
 			// Set the render target view before drawing
 			g_ptr_context->OMSetRenderTargets(1, &g_render_target_view, nullptr);
 		}
@@ -315,7 +331,7 @@ namespace direct_x_11_base
 		// Handle the F1 key press to unhook Direct X Functions and wnd process
 		if (GetAsyncKeyState(VK_F1) & 1)
 		{
-			direct_x_11_base::hooks::unhook();
+			unhook();
 		}
 
 		// Finish the ImGui frame and render ImGui
@@ -331,8 +347,10 @@ namespace direct_x_11_base
 	void hooks::init_hooks()
 	{
 		std::cout << DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
-		std::cout << IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
-		std::cout << IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
+		std::cout << IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) <<
+			std::endl;
+		std::cout << IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format(
+			"{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
 
 		ATTACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		ATTACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);
