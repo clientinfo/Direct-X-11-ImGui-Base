@@ -36,54 +36,54 @@ namespace direct_x_11_base
 	WNDPROC o_wnd_proc_handler = nullptr;
 
 	//Variable to store the device pointer of the ID3D11Device of the swap chain
-	ID3D11Device* ptr_device = nullptr;
+	ID3D11Device* g_ptr_device = nullptr;
 
 	//Variable to store the context pointer of the ID3D11DeviceContext of the swap chain
-	ID3D11DeviceContext* ptr_context = nullptr;
+	ID3D11DeviceContext* g_ptr_context = nullptr;
 
 	// HWND (Window Handle): A handle to the application's window, initialized to nullptr.
-	HWND window = nullptr;
+	HWND g_window = nullptr;
 
 	// Represents a DirectX 11 depth stencil state with depth testing turned off.
 	// It's initially set to nullptr.
-	ID3D11DepthStencilState* depth_stencil_state_false = nullptr;
+	ID3D11DepthStencilState* g_depth_stencil_state_false = nullptr;
 
 	// Represents the original/default DirectX 11 depth stencil state, which typically has depth testing enabled.
 	// It's initially set to nullptr.
-	ID3D11DepthStencilState* depth_stencil_state_orig = nullptr;
+	ID3D11DepthStencilState* g_depth_stencil_state_orig = nullptr;
 
 	// Represents a custom DirectX 11 rasterizer state with depth bias settings to false.
 	// Used for certain rendering effects.
-	ID3D11RasterizerState* depth_bias_state_false;
+	ID3D11RasterizerState* g_depth_bias_state_false;
 
 	// Represents a custom DirectX 11 rasterizer state with depth bias settings to true.
 	// Used for certain rendering effects.
-	ID3D11RasterizerState* depth_bias_state_true;
+	ID3D11RasterizerState* g_depth_bias_state_true;
 
 	// Represents the original/default DirectX 11 rasterizer state, which does not apply depth bias.
 	// Used for certain rendering effects.
-	ID3D11RasterizerState* depth_bias_state_orig;
+	ID3D11RasterizerState* g_depth_bias_state_orig;
 
 	// Represents a view that allows rendering to a target, like a back buffer in DirectX.
 	// It's initially set to nullptr.
-	ID3D11RenderTargetView* render_target_view = nullptr;
+	ID3D11RenderTargetView* g_render_target_view = nullptr;
 
 	// Represents a DirectX 11 viewport configuration that defines the area of the render target to draw into.
-	D3D11_VIEWPORT viewport;
+	D3D11_VIEWPORT g_viewport;
 
 	// Variables to store the center coordinates of the screen
-	float screen_center_x;
-	float screen_center_y;
+	float g_screen_center_x;
+	float g_screen_center_y;
 
 	// Number of viewports being used
-	unsigned int num_of_view_ports = 1;
+	unsigned int g_num_of_view_ports = 1;
 
 	// An int64_t variable used to store HRESULT error codes.
 	// HRESULT is a standard error code in Windows programming.
-	int64_t h_result_code;
+	int64_t g_h_result_code;
 
 	// A boolean flag that indicates whether ImGui has been initialized. It's initially set to false.
-	bool is_imgui_initialized = false;
+	bool g_is_imgui_initialized = false;
 
 	// This is a macro that calculates a depth bias value for DirectX 32-bit floating-point format.
 	// It's used to convert depth bias from a float to a format compatible with DXGI.
@@ -110,7 +110,7 @@ namespace direct_x_11_base
 		GetCursorPos(&m_pos);
 
 		// Convert the screen coordinates to client coordinates of the game window 
-		ScreenToClient(window, &m_pos);
+		ScreenToClient(g_window, &m_pos);
 
 		// Update the ImGui mouse cursor position based on the converted client coordinates
 		ImGui::GetIO().MousePos.x = m_pos.x;
@@ -140,10 +140,10 @@ namespace direct_x_11_base
 		ImGui_ImplDX11_InvalidateDeviceObjects();
 
 		// Check if a render target view exists and release it
-		if (nullptr != render_target_view)
+		if (nullptr != g_render_target_view)
 		{
-			render_target_view->Release();
-			render_target_view = nullptr;
+			g_render_target_view->Release();
+			g_render_target_view = nullptr;
 		}
 
 		// Call the original IDXGISwapChain::ResizeBuffers function and store its return value
@@ -160,20 +160,20 @@ namespace direct_x_11_base
 	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval, const unsigned int flags)
 	{
 		// Check if ImGui is initialized
-		if (!is_imgui_initialized)
+		if (!g_is_imgui_initialized)
 		{
-			is_imgui_initialized = true;  // Only initialize ImGui once
+			g_is_imgui_initialized = true;  // Only initialize ImGui once
 
 			// Get the device associated with the swap chain
-			if (SUCCEEDED(this_ptr->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&ptr_device))))
+			if (SUCCEEDED(this_ptr->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_ptr_device))))
 			{
 				// Gets the device pointer of the swap chain for later usage
-				this_ptr->GetDevice(__uuidof(ptr_device), reinterpret_cast<void**>(&ptr_device));
-				std::cout << DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(ptr_device)) << std::endl;
+				this_ptr->GetDevice(__uuidof(g_ptr_device), reinterpret_cast<void**>(&g_ptr_device));
+				std::cout << DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_device)) << std::endl;
 
 				//Get pointer of te context of the swap chain
-				ptr_device->GetImmediateContext(&ptr_context);
-				std::cout << CONTEXT_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(ptr_context)) << std::endl;
+				g_ptr_device->GetImmediateContext(&g_ptr_context);
+				std::cout << CONTEXT_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_context)) << std::endl;
 			}
 
 			// Create an ImGui context
@@ -189,15 +189,15 @@ namespace direct_x_11_base
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
 			// Get the window associated with the swap chain
-			window = swap_chain_desc.OutputWindow;
+			g_window = swap_chain_desc.OutputWindow;
 
 			// Set a custom window procedure handler for ImGui
-			o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
+			o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
 
 			// Initialize ImGui for Win and DirectX 11
-			ImGui_ImplWin32_Init(window);
-			ImGui_ImplDX11_Init(ptr_device, ptr_context);
-			ImGui::GetIO().ImeWindowHandle = window;
+			ImGui_ImplWin32_Init(g_window);
+			ImGui_ImplDX11_Init(g_ptr_device, g_ptr_context);
+			ImGui::GetIO().ImeWindowHandle = g_window;
 
 			// Creates depth stencil state for graphics rendering
 			D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
@@ -219,7 +219,7 @@ namespace direct_x_11_base
 			depth_stencil_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
 			depth_stencil_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			depth_stencil_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-			ptr_device->CreateDepthStencilState(&depth_stencil_desc, &depth_stencil_state_false);
+			g_ptr_device->CreateDepthStencilState(&depth_stencil_desc, &g_depth_stencil_state_false);
 
 			// Creates depth stencil state for graphics rendering
 			D3D11_RASTERIZER_DESC rasterizer_desc;
@@ -237,7 +237,7 @@ namespace direct_x_11_base
 			rasterizer_desc.ScissorEnable = false;
 			rasterizer_desc.MultisampleEnable = false;
 			rasterizer_desc.AntialiasedLineEnable = false;
-			ptr_device->CreateRasterizerState(&rasterizer_desc, &depth_bias_state_false);
+			g_ptr_device->CreateRasterizerState(&rasterizer_desc, &g_depth_bias_state_false);
 
 			// Creates normal rasterizer state for graphics rendering
 			D3D11_RASTERIZER_DESC normal_rasterizer_desc;
@@ -253,38 +253,38 @@ namespace direct_x_11_base
 			normal_rasterizer_desc.MultisampleEnable = false;
 			normal_rasterizer_desc.AntialiasedLineEnable = false;
 
-			ptr_device->CreateRasterizerState(&normal_rasterizer_desc, &depth_bias_state_true);
+			g_ptr_device->CreateRasterizerState(&normal_rasterizer_desc, &g_depth_bias_state_true);
 		}
 
-		if (render_target_view == nullptr)
+		if (g_render_target_view == nullptr)
 		{
 			// Get viewport information
-			ptr_context->RSGetViewports(&num_of_view_ports, &viewport);
-			screen_center_x = viewport.Width / 2.0f;
-			screen_center_y = viewport.Height / 2.0f;
+			g_ptr_context->RSGetViewports(&g_num_of_view_ports, &g_viewport);
+			g_screen_center_x = g_viewport.Width / 2.0f;
+			g_screen_center_y = g_viewport.Height / 2.0f;
 
 			// Gets the back buffer for rendering
 			ID3D11Texture2D* back_buffer = nullptr;
-			h_result_code = this_ptr->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
-			if (FAILED(h_result_code))
+			g_h_result_code = this_ptr->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
+			if (FAILED(g_h_result_code))
 			{
 				printf("%s\n",FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
-				return h_result_code;
+				return g_h_result_code;
 			}
 
 			// Creates a render target view for the back buffer
-			h_result_code = ptr_device->CreateRenderTargetView(back_buffer, nullptr, &render_target_view);
+			g_h_result_code = g_ptr_device->CreateRenderTargetView(back_buffer, nullptr, &g_render_target_view);
 			back_buffer->Release();
-			if (FAILED(h_result_code))
+			if (FAILED(g_h_result_code))
 			{
 				printf("%s\n", FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
-				return h_result_code;
+				return g_h_result_code;
 			}
 		}
 		else 
 		{ 
 			// Set the render target view before drawing
-			ptr_context->OMSetRenderTargets(1, &render_target_view, nullptr);
+			g_ptr_context->OMSetRenderTargets(1, &g_render_target_view, nullptr);
 		}
 
 		// Prepare for a new frame with ImGui
