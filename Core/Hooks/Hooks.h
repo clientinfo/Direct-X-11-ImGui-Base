@@ -8,13 +8,25 @@ namespace direct_x_11_base
 
 	public:
 
+		//Macro to simplify Function Hooking/Unhooking
 		#define ATTACH_HOOK(original, hook) (DetourTransactionBegin(), DetourUpdateThread(GetCurrentThread()), DetourAttach((LPVOID*)&(original), (LPVOID)(hook)), DetourTransactionCommit())
 		#define DETACH_HOOK(original, hook) (DetourTransactionBegin(), DetourUpdateThread(GetCurrentThread()), DetourDetach((LPVOID*)&(original), (LPVOID)(hook)), DetourTransactionCommit())
 
-		static void init_hooks();
+		//String variables for console text
+		inline static std::string DXGI_IMAGE_BASE_CONSOLE_TEXT = "dxgi.dll Imagebase: ";
+		inline static std::string IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT = "IDXGISwapChain::Present: ";
+		inline static std::string IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT = "IDXGISwapChain::ResizeBuffers: ";
+		inline static std::string DEVICE_CONSOLE_TEXT = "Device: ";
+		inline static std::string CONTEXT_CONSOLE_TEXT = "Context: ";
+		inline static std::string FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT = "Failed to get back_buffer";
+		inline static std::string FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT = "Failed to get RenderTarget";
+
+		//Variable for wnd proc hook
+		inline static WNDPROC o_wnd_proc_handler = nullptr;
 
 		inline static bool show_menu = false;
 
+		static void init_hooks();
 		static void unhook();
 
 	protected:

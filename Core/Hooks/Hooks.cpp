@@ -21,21 +21,8 @@ namespace direct_x_11_base
 
 	//Note: Those Offsets might break after Windows Updates so be prepare to update those manually or find a way to automaticly update them, since signatures also break easily
 	const static std::uintptr_t g_dxgi_base_address = reinterpret_cast<std::uintptr_t>(GetModuleHandleA("dxgi.dll"));
-	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0;
-	//sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
-	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40;
-	//sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
-
-	std::string DXGI_IMAGE_BASE_CONSOLE_TEXT = "dxgi.dll Imagebase: ";
-	std::string IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT = "IDXGISwapChain::Present: ";
-	std::string IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT = "IDXGISwapChain::ResizeBuffers: ";
-	std::string DEVICE_CONSOLE_TEXT = "Device: ";
-	std::string CONTEXT_CONSOLE_TEXT = "Context: ";
-	std::string FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT = "Failed to get back_buffer";
-	std::string FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT = "Failed to get RenderTarget";
-
-	//Variable for wnd proc hook
-	WNDPROC o_wnd_proc_handler = nullptr;
+	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0;	//sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
+	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40;//sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
 
 	//Variable to store the device pointer of the ID3D11Device of the swap chain
 	ID3D11Device* g_ptr_device = nullptr;
@@ -105,7 +92,7 @@ namespace direct_x_11_base
 		g_offset_IDXGISwapChain_ResizeBuffers);
 
 	// Universal Wnd Process hook, should stop most game of draging your mouse to the middle of the screen or transmit keystrokes to the gamme
-	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND h_wnd, const UINT u_msg, const WPARAM w_param, const LPARAM l_param)
+	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND h_wnd, const unsigned int u_msg, const WPARAM w_param, const LPARAM l_param)
 	{
 		// Get a reference to the ImGui input/output (IO) structure
 		ImGuiIO& io = ImGui::GetIO();
@@ -168,6 +155,7 @@ namespace direct_x_11_base
 		return r_result;
 	}
 
+	
 	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval,
 	                                                      const unsigned int flags)
 	{
@@ -181,12 +169,12 @@ namespace direct_x_11_base
 			{
 				// Gets the device pointer of the swap chain for later usage
 				this_ptr->GetDevice(__uuidof(g_ptr_device), reinterpret_cast<void**>(&g_ptr_device));
-				std::cout << DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_device))
+				std::cout << direct_x_11_base::hooks::DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_device))
 					<< std::endl;
 
 				//Get pointer of te context of the swap chain
 				g_ptr_device->GetImmediateContext(&g_ptr_context);
-				std::cout << CONTEXT_CONSOLE_TEXT << std::format(
+				std::cout << direct_x_11_base::hooks::CONTEXT_CONSOLE_TEXT << std::format(
 					"{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_context)) << std::endl;
 			}
 
@@ -206,7 +194,7 @@ namespace direct_x_11_base
 			g_window = swap_chain_desc.OutputWindow;
 
 			// Set a custom window procedure handler for ImGui
-			o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+			direct_x_11_base::hooks::o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
 				g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
 
 			// Initialize ImGui for Win and DirectX 11
@@ -284,7 +272,7 @@ namespace direct_x_11_base
 				GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
 			if (FAILED(g_h_result_code))
 			{
-				printf("%s\n", FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
+				printf("%s\n", direct_x_11_base::hooks::FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
 				return g_h_result_code;
 			}
 
@@ -293,7 +281,7 @@ namespace direct_x_11_base
 			back_buffer->Release();
 			if (FAILED(g_h_result_code))
 			{
-				printf("%s\n", FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
+				printf("%s\n", direct_x_11_base::hooks::FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
 				return g_h_result_code;
 			}
 		}
@@ -311,10 +299,10 @@ namespace direct_x_11_base
 		// Toggle menu visibility with the INSERT key
 		if (GetAsyncKeyState(VK_INSERT) & 1)
 		{
-			show_menu = !show_menu;
+			direct_x_11_base::hooks::show_menu = !direct_x_11_base::hooks::show_menu;
 		}
 
-		if (show_menu)
+		if (direct_x_11_base::hooks::show_menu)
 		{
 			ImGui::GetIO().MouseDrawCursor = true;
 
@@ -346,11 +334,9 @@ namespace direct_x_11_base
 	// Sets needed hooks here
 	void hooks::init_hooks()
 	{
-		std::cout << DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
-		std::cout << IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) <<
-			std::endl;
-		std::cout << IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format(
-			"{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
+		std::cout << direct_x_11_base::hooks::DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
+		std::cout << direct_x_11_base::hooks::IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
+		std::cout << direct_x_11_base::hooks::IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
 
 		ATTACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		ATTACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);
