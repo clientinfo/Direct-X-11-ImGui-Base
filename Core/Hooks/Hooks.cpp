@@ -3,7 +3,7 @@
 namespace direct_x_11_base
 {
 
-	hooks _hooks;
+	hooks g_hooks;
 
 	//dxgi.dll Function offsets
 	//-----------------------------
@@ -45,71 +45,68 @@ namespace direct_x_11_base
 	tID3D11DeviceContext_DrawIndexedInstanced oID3D11DeviceContext_DrawIndexedInstanced = nullptr;
 
 	// Universal Wnd Process hook, should stop most game of draging your mouse to the middle of the screen or transmit keystrokes to the gamme
-	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND h_wnd, const unsigned int u_msg, const WPARAM w_param, const LPARAM l_param)
+	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND arg_hwnd, const unsigned int arg_umsg, const WPARAM arg_wparam, const LPARAM arg_lparam)
 	{
-		// Get a reference to the ImGui input/output (IO) structure
-		ImGuiIO& io = ImGui::GetIO();
-
 		// Declare a POINT structure to store mouse cursor position
-		POINT m_pos;
+		POINT l_pos;
 
 		// Get the current cursor position in screen coordinates
-		GetCursorPos(&m_pos);
+		GetCursorPos(&l_pos);
 
 		// Convert the screen coordinates to client coordinates of the game window 
-		ScreenToClient(_hooks.g_window, &m_pos);
+		ScreenToClient(g_hooks.m_ptr_window, &l_pos);
 
 		// Update the ImGui mouse cursor position based on the converted client coordinates
-		ImGui::GetIO().MousePos.x = m_pos.x;
-		ImGui::GetIO().MousePos.y = m_pos.y;
+		ImGui::GetIO().MousePos.x = l_pos.x;
+		ImGui::GetIO().MousePos.y = l_pos.y;
 
 		// Check if ImGui wants to handle the Windows message (UI input)
-		if (ImGui_ImplWin32_WndProcHandler(h_wnd, u_msg, w_param, l_param))
+		if (ImGui_ImplWin32_WndProcHandler(arg_hwnd, arg_umsg, arg_wparam, arg_lparam))
 		{
 			// ImGui handles the message, so return true to prevent further processing
 			return true;
 		}
 
 		// Check if the menu is being shown and ignore certain messages
-		if (_hooks.show_menu && u_msg != 0x8043 && u_msg != 0x8044)
+		if (g_hooks.m_is_menu_shown && arg_umsg != 0x8043 && arg_umsg != 0x8044)
 		{
 			// Menu is being shown, and the message is not one of the specified types, so return true to block it
 			return true;
 		}
 
 		// If none of the above conditions apply, call the original window procedure to handle the message
-		return CallWindowProc(_hooks.o_wnd_proc_handler, h_wnd, u_msg, w_param, l_param);
+		return CallWindowProc(g_hooks.o_wnd_proc_handler, arg_hwnd, arg_umsg, arg_wparam, arg_lparam);
 	}
 
-	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced(ID3D11DeviceContext* pContext,unsigned int IndexCountPerInstance, unsigned int InstanceCount, unsigned int StartIndexLocation, int  BaseVertexLocation, unsigned int StartInstanceLocation)
+	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced(ID3D11DeviceContext* arg_pContext,unsigned int arg_IndexCountPerInstance, unsigned int arg_InstanceCount, unsigned int arg_StartIndexLocation, int  arg_BaseVertexLocation, unsigned int arg_StartInstanceLocation)
 	{
 		//can be used for video games cheat to do direct X chams incase DrawIndexed doesnt work
 		
-		return oID3D11DeviceContext_DrawIndexedInstanced(pContext,IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+		return oID3D11DeviceContext_DrawIndexedInstanced(arg_pContext,arg_IndexCountPerInstance, arg_InstanceCount, arg_StartIndexLocation, arg_BaseVertexLocation, arg_StartInstanceLocation);
 	}
 
-	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* pContext, unsigned int IndexCount, unsigned int StartIndexLocation,int BaseVertexLocation)
+	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* arg_pContext, unsigned int arg_IndexCount, unsigned int arg_StartIndexLocation,int arg_BaseVertexLocation)
 	{
 		//can be used to applied textures or shaders or other property changes to object in the application
 
-		return oID3D11DeviceContext_DrawIndexed(pContext,IndexCount, StartIndexLocation, BaseVertexLocation);
+		return oID3D11DeviceContext_DrawIndexed(arg_pContext,arg_IndexCount, arg_StartIndexLocation, arg_BaseVertexLocation);
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* this_ptr,const unsigned int buffer_count,const unsigned int width, const unsigned int height,const DXGI_FORMAT new_format,const unsigned int swap_chain_flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* arg_p_swapchain,const unsigned int arg_buffer_count,const unsigned int arg_width, const unsigned int arg_height,const DXGI_FORMAT arg_new_format,const unsigned int arg_swap_chain_flags)
 	{
 		// Invalidate ImGui's device objects to prepare for resizing
 		ImGui_ImplDX11_InvalidateDeviceObjects();
 
 		// Check if a render target view exists and release it
-		if (nullptr != _hooks.g_render_target_view)
+		if (nullptr != g_hooks.m_render_target_view)
 		{
-			_hooks.g_render_target_view->Release();
-			_hooks.g_render_target_view = nullptr;
+			g_hooks.m_render_target_view->Release();
+			g_hooks.m_render_target_view = nullptr;
 		}
 
 		// Call the original IDXGISwapChain::ResizeBuffers function and store its return value
-		const int64_t r_result = o_IDXGISwapChain_ResizeBuffers(this_ptr, buffer_count, width, height, new_format,
-		                                                        swap_chain_flags);
+		const int64_t r_result = o_IDXGISwapChain_ResizeBuffers(arg_p_swapchain, arg_buffer_count, arg_width, arg_height, arg_new_format,
+		                                                        arg_swap_chain_flags);
 
 		// Recreate ImGui's device objects after resizing
 		ImGui_ImplDX11_CreateDeviceObjects();
@@ -118,35 +115,35 @@ namespace direct_x_11_base
 		return r_result;
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval,const unsigned int flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* arg_p_swapchain, const unsigned int arg_sync_interval,const unsigned int arg_flags)
 	{
 		// Check if ImGui is initialized
-		if (!_hooks.g_is_imgui_initialized)
+		if (!g_hooks.m_is_imgui_initialized)
 		{
-			_hooks.g_is_imgui_initialized = true; // Only initialize ImGui once
+			g_hooks.m_is_imgui_initialized = true; // Only initialize ImGui once
 
 			// Get the device associated with the swap chain
-			if (SUCCEEDED(this_ptr->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&_hooks.g_ptr_device))))
+			if (SUCCEEDED(arg_p_swapchain->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_hooks.m_ptr_device))))
 			{
 				// Gets the device pointer of the swap chain for later usage
-				this_ptr->GetDevice(__uuidof(_hooks.g_ptr_device), reinterpret_cast<void**>(&_hooks.g_ptr_device));
-				std::cout << _hooks.DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(_hooks.g_ptr_device))
+				arg_p_swapchain->GetDevice(__uuidof(g_hooks.m_ptr_device), reinterpret_cast<void**>(&g_hooks.m_ptr_device));
+				std::cout << g_hooks.DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_hooks.m_ptr_device))
 					<< std::endl;
 
 				//Get pointer of te context of the swap chain
-				_hooks.g_ptr_device->GetImmediateContext(&_hooks.g_ptr_context);
-				std::cout << _hooks.CONTEXT_CONSOLE_TEXT << std::format(
-					"{:#x}", reinterpret_cast<std::uintptr_t>(_hooks.g_ptr_context)) << std::endl;
+				g_hooks.m_ptr_device->GetImmediateContext(&g_hooks.m_ptr_context);
+				std::cout << g_hooks.CONTEXT_CONSOLE_TEXT << std::format(
+					"{:#x}", reinterpret_cast<std::uintptr_t>(g_hooks.m_ptr_context)) << std::endl;
 
 				//This part gives us additional Funktion addresses which we going to hook
-				auto p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(_hooks.g_ptr_context);
+				auto p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(g_hooks.m_ptr_context);
 				p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(p_device_context_v_table[0]);
 
 				oID3D11DeviceContext_DrawIndexed = reinterpret_cast<tID3D11DeviceContext_DrawIndexed>(p_device_context_v_table[12]);
 				oID3D11DeviceContext_DrawIndexedInstanced = reinterpret_cast<tID3D11DeviceContext_DrawIndexedInstanced>(p_device_context_v_table[20]);
 
-				std::cout << _hooks.ID3D11DEVICECONTEXT_DRAWINDEXED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexed)) << std::endl;
-				std::cout << _hooks.ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexedInstanced)) << std::endl;
+				std::cout << g_hooks.ID3D11DEVICECONTEXT_DRAWINDEXED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexed)) << std::endl;
+				std::cout << g_hooks.ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexedInstanced)) << std::endl;
 
 				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexed, direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexed);
 				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexedInstanced, direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced);
@@ -154,7 +151,7 @@ namespace direct_x_11_base
 
 			// Create an ImGui context
 			DXGI_SWAP_CHAIN_DESC swap_chain_desc;
-			this_ptr->GetDesc(&swap_chain_desc);
+			arg_p_swapchain->GetDesc(&swap_chain_desc);
 
 			ImGui::CreateContext();
 			ImGuiIO& io = ImGui::GetIO();
@@ -165,16 +162,16 @@ namespace direct_x_11_base
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
 			// Get the window associated with the swap chain
-			_hooks.g_window = swap_chain_desc.OutputWindow;
+			g_hooks.m_ptr_window = swap_chain_desc.OutputWindow;
 
 			// Set a custom window procedure handler for ImGui
-			_hooks.o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
-				_hooks.g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
+			g_hooks.o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+				g_hooks.m_ptr_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
 
 			// Initialize ImGui for Win and DirectX 11
-			ImGui_ImplWin32_Init(_hooks.g_window);
-			ImGui_ImplDX11_Init(_hooks.g_ptr_device, _hooks.g_ptr_context);
-			ImGui::GetIO().ImeWindowHandle = _hooks.g_window;
+			ImGui_ImplWin32_Init(g_hooks.m_ptr_window);
+			ImGui_ImplDX11_Init(g_hooks.m_ptr_device, g_hooks.m_ptr_context);
+			ImGui::GetIO().ImeWindowHandle = g_hooks.m_ptr_window;
 
 			// Creates depth stencil state for graphics rendering
 			D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
@@ -196,7 +193,7 @@ namespace direct_x_11_base
 			depth_stencil_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
 			depth_stencil_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			depth_stencil_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-			_hooks.g_ptr_device->CreateDepthStencilState(&depth_stencil_desc, &_hooks.g_depth_stencil_state_false);
+			g_hooks.m_ptr_device->CreateDepthStencilState(&depth_stencil_desc, &g_hooks.m_depth_stencil_state_false);
 
 			// Creates depth stencil state for graphics rendering
 			D3D11_RASTERIZER_DESC rasterizer_desc;
@@ -214,7 +211,7 @@ namespace direct_x_11_base
 			rasterizer_desc.ScissorEnable = false;
 			rasterizer_desc.MultisampleEnable = false;
 			rasterizer_desc.AntialiasedLineEnable = false;
-			_hooks.g_ptr_device->CreateRasterizerState(&rasterizer_desc, &_hooks.g_depth_bias_state_false);
+			g_hooks.m_ptr_device->CreateRasterizerState(&rasterizer_desc, &g_hooks.m_depth_bias_state_false);
 
 			// Creates normal rasterizer state for graphics rendering
 			D3D11_RASTERIZER_DESC normal_rasterizer_desc;
@@ -230,39 +227,39 @@ namespace direct_x_11_base
 			normal_rasterizer_desc.MultisampleEnable = false;
 			normal_rasterizer_desc.AntialiasedLineEnable = false;
 
-			_hooks.g_ptr_device->CreateRasterizerState(&normal_rasterizer_desc, &_hooks.g_depth_bias_state_true);
+			g_hooks.m_ptr_device->CreateRasterizerState(&normal_rasterizer_desc, &g_hooks.m_depth_bias_state_true);
 		}
 
-		if (_hooks.g_render_target_view == nullptr)
+		if (g_hooks.m_render_target_view == nullptr)
 		{
 			// Get viewport information
-			_hooks.g_ptr_context->RSGetViewports(&hooks::g_num_of_view_ports, &_hooks.g_viewport);
-			_hooks.g_screen_center_x = _hooks.g_viewport.Width / 2.0f;
-			_hooks.g_screen_center_y = _hooks.g_viewport.Height / 2.0f;
+			g_hooks.m_ptr_context->RSGetViewports(&hooks::g_num_of_view_ports, &g_hooks.m_viewport);
+			g_hooks.m_screen_center_x = g_hooks.m_viewport.Width / 2.0f;
+			g_hooks.m_screen_center_y = g_hooks.m_viewport.Height / 2.0f;
 
 			// Gets the back buffer for rendering
 			ID3D11Texture2D* back_buffer = nullptr;
-			_hooks.g_h_result_code = this_ptr->
+			g_hooks.m_h_result_code = arg_p_swapchain->
 				GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
-			if (FAILED(_hooks.g_h_result_code))
+			if (FAILED(g_hooks.m_h_result_code))
 			{
-				printf("%s\n", _hooks.FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
-				return _hooks.g_h_result_code;
+				printf("%s\n", g_hooks.FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
+				return g_hooks.m_h_result_code;
 			}
 
 			// Creates a render target view for the back buffer
-			_hooks.g_h_result_code = _hooks.g_ptr_device->CreateRenderTargetView(back_buffer, nullptr, &_hooks.g_render_target_view);
+			g_hooks.m_h_result_code = g_hooks.m_ptr_device->CreateRenderTargetView(back_buffer, nullptr, &g_hooks.m_render_target_view);
 			back_buffer->Release();
-			if (FAILED(_hooks.g_h_result_code))
+			if (FAILED(g_hooks.m_h_result_code))
 			{
-				printf("%s\n", _hooks.FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
-				return _hooks.g_h_result_code;
+				printf("%s\n", g_hooks.FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
+				return g_hooks.m_h_result_code;
 			}
 		}
 		else
 		{
 			// Set the render target view before drawing
-			_hooks.g_ptr_context->OMSetRenderTargets(1, &_hooks.g_render_target_view, nullptr);
+			g_hooks.m_ptr_context->OMSetRenderTargets(1, &g_hooks.m_render_target_view, nullptr);
 		}
 
 		// Prepare for a new frame with ImGui
@@ -273,10 +270,10 @@ namespace direct_x_11_base
 		// Toggle menu visibility with the INSERT key
 		if (GetAsyncKeyState(VK_INSERT) & 1)
 		{
-			_hooks.show_menu = !_hooks.show_menu;
+			g_hooks.m_is_menu_shown = !g_hooks.m_is_menu_shown;
 		}
 
-		if (_hooks.show_menu)
+		if (g_hooks.m_is_menu_shown)
 		{
 			ImGui::GetIO().MouseDrawCursor = true;
 
@@ -302,15 +299,15 @@ namespace direct_x_11_base
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 		// Call the original IDXGISwapChain::Present function and return its result
-		return o_IDXGISwapChain_Present(this_ptr, sync_interval, flags);
+		return o_IDXGISwapChain_Present(arg_p_swapchain, arg_sync_interval, arg_flags);
 	}
 
 	// Sets needed hooks here
 	void hooks::init_hooks()
 	{
-		std::cout << _hooks.DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
-		std::cout << _hooks.IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
-		std::cout << _hooks.IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
+		std::cout << g_hooks.DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
+		std::cout << g_hooks.IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
+		std::cout << g_hooks.IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
 
 		ATTACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		ATTACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);
@@ -321,6 +318,6 @@ namespace direct_x_11_base
 	{
 		DETACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		DETACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);
-		DETACH_HOOK(_hooks.o_wnd_proc_handler, hk_wnd_proc);
+		DETACH_HOOK(g_hooks.o_wnd_proc_handler, hk_wnd_proc);
 	}
 }
