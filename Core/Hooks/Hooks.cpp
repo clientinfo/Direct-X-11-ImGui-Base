@@ -2,6 +2,9 @@
 
 namespace direct_x_11_base
 {
+
+	hooks _hooks;
+
 	//dxgi.dll Function offsets
 	//-----------------------------
 	//To get those:
@@ -24,72 +27,22 @@ namespace direct_x_11_base
 	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0;	//sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
 	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40;//sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
 
-	//Variable to store the device pointer of the ID3D11Device of the swap chain
-	ID3D11Device* g_ptr_device = nullptr;
-
-	//Variable to store the context pointer of the ID3D11DeviceContext of the swap chain
-	ID3D11DeviceContext* g_ptr_context = nullptr;
-
-	// HWND (Window Handle): A handle to the application's window, initialized to nullptr.
-	HWND g_window = nullptr;
-
-	// Represents a DirectX 11 depth stencil state with depth testing turned off.
-	// It's initially set to nullptr.
-	ID3D11DepthStencilState* g_depth_stencil_state_false = nullptr;
-
-	// Represents the original/default DirectX 11 depth stencil state, which typically has depth testing enabled.
-	// It's initially set to nullptr.
-	ID3D11DepthStencilState* g_depth_stencil_state_orig = nullptr;
-
-	// Represents a custom DirectX 11 rasterizer state with depth bias settings to false.
-	// Used for certain rendering effects.
-	ID3D11RasterizerState* g_depth_bias_state_false;
-
-	// Represents a custom DirectX 11 rasterizer state with depth bias settings to true.
-	// Used for certain rendering effects.
-	ID3D11RasterizerState* g_depth_bias_state_true;
-
-	// Represents the original/default DirectX 11 rasterizer state, which does not apply depth bias.
-	// Used for certain rendering effects.
-	ID3D11RasterizerState* g_depth_bias_state_orig;
-
-	// Represents a view that allows rendering to a target, like a back buffer in DirectX.
-	// It's initially set to nullptr.
-	ID3D11RenderTargetView* g_render_target_view = nullptr;
-
-	// Represents a DirectX 11 viewport configuration that defines the area of the render target to draw into.
-	D3D11_VIEWPORT g_viewport;
-
-	// Variables to store the center coordinates of the screen
-	float g_screen_center_x;
-	float g_screen_center_y;
-
-	// Number of viewports being used
-	unsigned int g_num_of_view_ports = 1;
-
-	// An int64_t variable used to store HRESULT error codes.
-	// HRESULT is a standard error code in Windows programming.
-	int64_t g_h_result_code;
-
-	// A boolean flag that indicates whether ImGui has been initialized. It's initially set to false.
-	bool g_is_imgui_initialized = false;
-
-	// This is a macro that calculates a depth bias value for DirectX 32-bit floating-point format.
-	// It's used to convert depth bias from a float to a format compatible with DXGI.
-#define DEPTH_BIAS_D32_FLOAT(d) (d/(1/pow(2,23)))
-
 	// int64_t __fastcall IDXGISwapChain_Present(IDXGISwapChain* this, unsigned int SyncInterval, unsigned int Flags)
-	using tIDXGISwapChain_Present = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int SyncInterval,
-	                                                     unsigned int Flags);
-	tIDXGISwapChain_Present o_IDXGISwapChain_Present = reinterpret_cast<tIDXGISwapChain_Present>(
-		g_offset_IDXGISwapChain_Present);
+	using tIDXGISwapChain_Present = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int SyncInterval,unsigned int Flags);
+	tIDXGISwapChain_Present o_IDXGISwapChain_Present = reinterpret_cast<tIDXGISwapChain_Present>(g_offset_IDXGISwapChain_Present);
 
 	// int64_t __fastcall IDXGISwapChain::ResizeBuffers(IDXGISwapChain* this, unsigned int BufferCount, unsigned int Width, unsigned int Height, DXGI_FORMAT NewFormat, unsigned int SwapChainFlags)
-	using tIDXGISwapChain_ResizeBuffers = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int BufferCount,
-	                                                           unsigned int Width, unsigned int Height,
+	using tIDXGISwapChain_ResizeBuffers = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int BufferCount,unsigned int Width, unsigned int Height,
 	                                                           DXGI_FORMAT NewFormat, unsigned int SwapChainFlags);
-	tIDXGISwapChain_ResizeBuffers o_IDXGISwapChain_ResizeBuffers = reinterpret_cast<tIDXGISwapChain_ResizeBuffers>(
-		g_offset_IDXGISwapChain_ResizeBuffers);
+	tIDXGISwapChain_ResizeBuffers o_IDXGISwapChain_ResizeBuffers = reinterpret_cast<tIDXGISwapChain_ResizeBuffers>(g_offset_IDXGISwapChain_ResizeBuffers);
+
+	//int64_t __fastcall ID3D11DeviceContext::DrawIndexed(ID3D11DeviceContext* pContext, unsigned int IndexCount,unsigned int StartIndexLocation,int  BaseVertexLocation)
+	using  tID3D11DeviceContext_DrawIndexed = int64_t(__fastcall*)(ID3D11DeviceContext* pContext, unsigned int IndexCount, unsigned int StartIndexLocation, int BaseVertexLocation);
+	tID3D11DeviceContext_DrawIndexed oID3D11DeviceContext_DrawIndexed = nullptr;
+
+	//int64_t __fastcall* ID3D11DeviceContext::DrawIndexedInstanced(ID3D11DeviceContext* pContext, unsigned int IndexCountPerInstance,unsigned int InstanceCount,unsigned int StartIndexLocation,int  BaseVertexLocation,unsigned int StartInstanceLocation)
+	using tID3D11DeviceContext_DrawIndexedInstanced = int64_t(__fastcall*)(ID3D11DeviceContext* pContext, unsigned int IndexCountPerInstance, unsigned int InstanceCount, unsigned int StartIndexLocation, int  BaseVertexLocation, unsigned int StartInstanceLocation);
+	tID3D11DeviceContext_DrawIndexedInstanced oID3D11DeviceContext_DrawIndexedInstanced = nullptr;
 
 	// Universal Wnd Process hook, should stop most game of draging your mouse to the middle of the screen or transmit keystrokes to the gamme
 	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND h_wnd, const unsigned int u_msg, const WPARAM w_param, const LPARAM l_param)
@@ -104,7 +57,7 @@ namespace direct_x_11_base
 		GetCursorPos(&m_pos);
 
 		// Convert the screen coordinates to client coordinates of the game window 
-		ScreenToClient(g_window, &m_pos);
+		ScreenToClient(_hooks.g_window, &m_pos);
 
 		// Update the ImGui mouse cursor position based on the converted client coordinates
 		ImGui::GetIO().MousePos.x = m_pos.x;
@@ -118,30 +71,40 @@ namespace direct_x_11_base
 		}
 
 		// Check if the menu is being shown and ignore certain messages
-		if (show_menu && u_msg != 0x8043 && u_msg != 0x8044)
+		if (_hooks.show_menu && u_msg != 0x8043 && u_msg != 0x8044)
 		{
 			// Menu is being shown, and the message is not one of the specified types, so return true to block it
 			return true;
 		}
 
 		// If none of the above conditions apply, call the original window procedure to handle the message
-		return CallWindowProc(o_wnd_proc_handler, h_wnd, u_msg, w_param, l_param);
+		return CallWindowProc(_hooks.o_wnd_proc_handler, h_wnd, u_msg, w_param, l_param);
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* this_ptr,
-	                                                             const unsigned int buffer_count,
-	                                                             const unsigned int width, const unsigned int height,
-	                                                             const DXGI_FORMAT new_format,
-	                                                             const unsigned int swap_chain_flags)
+	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced(ID3D11DeviceContext* pContext,unsigned int IndexCountPerInstance, unsigned int InstanceCount, unsigned int StartIndexLocation, int  BaseVertexLocation, unsigned int StartInstanceLocation)
+	{
+		//can be used for video games cheat to do direct X chams incase DrawIndexed doesnt work
+		
+		return oID3D11DeviceContext_DrawIndexedInstanced(pContext,IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation);
+	}
+
+	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* pContext, unsigned int IndexCount, unsigned int StartIndexLocation,int BaseVertexLocation)
+	{
+		//can be used to applied textures or shaders or other property changes to object in the application
+
+		return oID3D11DeviceContext_DrawIndexed(pContext,IndexCount, StartIndexLocation, BaseVertexLocation);
+	}
+
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* this_ptr,const unsigned int buffer_count,const unsigned int width, const unsigned int height,const DXGI_FORMAT new_format,const unsigned int swap_chain_flags)
 	{
 		// Invalidate ImGui's device objects to prepare for resizing
 		ImGui_ImplDX11_InvalidateDeviceObjects();
 
 		// Check if a render target view exists and release it
-		if (nullptr != g_render_target_view)
+		if (nullptr != _hooks.g_render_target_view)
 		{
-			g_render_target_view->Release();
-			g_render_target_view = nullptr;
+			_hooks.g_render_target_view->Release();
+			_hooks.g_render_target_view = nullptr;
 		}
 
 		// Call the original IDXGISwapChain::ResizeBuffers function and store its return value
@@ -155,27 +118,38 @@ namespace direct_x_11_base
 		return r_result;
 	}
 
-	
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval,
-	                                                      const unsigned int flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* this_ptr, const unsigned int sync_interval,const unsigned int flags)
 	{
 		// Check if ImGui is initialized
-		if (!g_is_imgui_initialized)
+		if (!_hooks.g_is_imgui_initialized)
 		{
-			g_is_imgui_initialized = true; // Only initialize ImGui once
+			_hooks.g_is_imgui_initialized = true; // Only initialize ImGui once
 
 			// Get the device associated with the swap chain
-			if (SUCCEEDED(this_ptr->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_ptr_device))))
+			if (SUCCEEDED(this_ptr->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&_hooks.g_ptr_device))))
 			{
 				// Gets the device pointer of the swap chain for later usage
-				this_ptr->GetDevice(__uuidof(g_ptr_device), reinterpret_cast<void**>(&g_ptr_device));
-				std::cout << direct_x_11_base::hooks::DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_device))
+				this_ptr->GetDevice(__uuidof(_hooks.g_ptr_device), reinterpret_cast<void**>(&_hooks.g_ptr_device));
+				std::cout << _hooks.DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(_hooks.g_ptr_device))
 					<< std::endl;
 
 				//Get pointer of te context of the swap chain
-				g_ptr_device->GetImmediateContext(&g_ptr_context);
-				std::cout << direct_x_11_base::hooks::CONTEXT_CONSOLE_TEXT << std::format(
-					"{:#x}", reinterpret_cast<std::uintptr_t>(g_ptr_context)) << std::endl;
+				_hooks.g_ptr_device->GetImmediateContext(&_hooks.g_ptr_context);
+				std::cout << _hooks.CONTEXT_CONSOLE_TEXT << std::format(
+					"{:#x}", reinterpret_cast<std::uintptr_t>(_hooks.g_ptr_context)) << std::endl;
+
+				//This part gives us additional Funktion addresses which we going to hook
+				auto p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(_hooks.g_ptr_context);
+				p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(p_device_context_v_table[0]);
+
+				oID3D11DeviceContext_DrawIndexed = reinterpret_cast<tID3D11DeviceContext_DrawIndexed>(p_device_context_v_table[12]);
+				oID3D11DeviceContext_DrawIndexedInstanced = reinterpret_cast<tID3D11DeviceContext_DrawIndexedInstanced>(p_device_context_v_table[20]);
+
+				std::cout << _hooks.ID3D11DEVICECONTEXT_DRAWINDEXED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexed)) << std::endl;
+				std::cout << _hooks.ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexedInstanced)) << std::endl;
+
+				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexed, direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexed);
+				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexedInstanced, direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced);
 			}
 
 			// Create an ImGui context
@@ -191,16 +165,16 @@ namespace direct_x_11_base
 			io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 
 			// Get the window associated with the swap chain
-			g_window = swap_chain_desc.OutputWindow;
+			_hooks.g_window = swap_chain_desc.OutputWindow;
 
 			// Set a custom window procedure handler for ImGui
-			direct_x_11_base::hooks::o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
-				g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
+			_hooks.o_wnd_proc_handler = reinterpret_cast<WNDPROC>(SetWindowLongPtr(
+				_hooks.g_window, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(hk_wnd_proc)));
 
 			// Initialize ImGui for Win and DirectX 11
-			ImGui_ImplWin32_Init(g_window);
-			ImGui_ImplDX11_Init(g_ptr_device, g_ptr_context);
-			ImGui::GetIO().ImeWindowHandle = g_window;
+			ImGui_ImplWin32_Init(_hooks.g_window);
+			ImGui_ImplDX11_Init(_hooks.g_ptr_device, _hooks.g_ptr_context);
+			ImGui::GetIO().ImeWindowHandle = _hooks.g_window;
 
 			// Creates depth stencil state for graphics rendering
 			D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
@@ -222,7 +196,7 @@ namespace direct_x_11_base
 			depth_stencil_desc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
 			depth_stencil_desc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 			depth_stencil_desc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-			g_ptr_device->CreateDepthStencilState(&depth_stencil_desc, &g_depth_stencil_state_false);
+			_hooks.g_ptr_device->CreateDepthStencilState(&depth_stencil_desc, &_hooks.g_depth_stencil_state_false);
 
 			// Creates depth stencil state for graphics rendering
 			D3D11_RASTERIZER_DESC rasterizer_desc;
@@ -240,7 +214,7 @@ namespace direct_x_11_base
 			rasterizer_desc.ScissorEnable = false;
 			rasterizer_desc.MultisampleEnable = false;
 			rasterizer_desc.AntialiasedLineEnable = false;
-			g_ptr_device->CreateRasterizerState(&rasterizer_desc, &g_depth_bias_state_false);
+			_hooks.g_ptr_device->CreateRasterizerState(&rasterizer_desc, &_hooks.g_depth_bias_state_false);
 
 			// Creates normal rasterizer state for graphics rendering
 			D3D11_RASTERIZER_DESC normal_rasterizer_desc;
@@ -256,39 +230,39 @@ namespace direct_x_11_base
 			normal_rasterizer_desc.MultisampleEnable = false;
 			normal_rasterizer_desc.AntialiasedLineEnable = false;
 
-			g_ptr_device->CreateRasterizerState(&normal_rasterizer_desc, &g_depth_bias_state_true);
+			_hooks.g_ptr_device->CreateRasterizerState(&normal_rasterizer_desc, &_hooks.g_depth_bias_state_true);
 		}
 
-		if (g_render_target_view == nullptr)
+		if (_hooks.g_render_target_view == nullptr)
 		{
 			// Get viewport information
-			g_ptr_context->RSGetViewports(&g_num_of_view_ports, &g_viewport);
-			g_screen_center_x = g_viewport.Width / 2.0f;
-			g_screen_center_y = g_viewport.Height / 2.0f;
+			_hooks.g_ptr_context->RSGetViewports(&hooks::g_num_of_view_ports, &_hooks.g_viewport);
+			_hooks.g_screen_center_x = _hooks.g_viewport.Width / 2.0f;
+			_hooks.g_screen_center_y = _hooks.g_viewport.Height / 2.0f;
 
 			// Gets the back buffer for rendering
 			ID3D11Texture2D* back_buffer = nullptr;
-			g_h_result_code = this_ptr->
+			_hooks.g_h_result_code = this_ptr->
 				GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&back_buffer));
-			if (FAILED(g_h_result_code))
+			if (FAILED(_hooks.g_h_result_code))
 			{
-				printf("%s\n", direct_x_11_base::hooks::FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
-				return g_h_result_code;
+				printf("%s\n", _hooks.FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT.c_str());
+				return _hooks.g_h_result_code;
 			}
 
 			// Creates a render target view for the back buffer
-			g_h_result_code = g_ptr_device->CreateRenderTargetView(back_buffer, nullptr, &g_render_target_view);
+			_hooks.g_h_result_code = _hooks.g_ptr_device->CreateRenderTargetView(back_buffer, nullptr, &_hooks.g_render_target_view);
 			back_buffer->Release();
-			if (FAILED(g_h_result_code))
+			if (FAILED(_hooks.g_h_result_code))
 			{
-				printf("%s\n", direct_x_11_base::hooks::FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
-				return g_h_result_code;
+				printf("%s\n", _hooks.FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT.c_str());
+				return _hooks.g_h_result_code;
 			}
 		}
 		else
 		{
 			// Set the render target view before drawing
-			g_ptr_context->OMSetRenderTargets(1, &g_render_target_view, nullptr);
+			_hooks.g_ptr_context->OMSetRenderTargets(1, &_hooks.g_render_target_view, nullptr);
 		}
 
 		// Prepare for a new frame with ImGui
@@ -299,10 +273,10 @@ namespace direct_x_11_base
 		// Toggle menu visibility with the INSERT key
 		if (GetAsyncKeyState(VK_INSERT) & 1)
 		{
-			direct_x_11_base::hooks::show_menu = !direct_x_11_base::hooks::show_menu;
+			_hooks.show_menu = !_hooks.show_menu;
 		}
 
-		if (direct_x_11_base::hooks::show_menu)
+		if (_hooks.show_menu)
 		{
 			ImGui::GetIO().MouseDrawCursor = true;
 
@@ -334,9 +308,9 @@ namespace direct_x_11_base
 	// Sets needed hooks here
 	void hooks::init_hooks()
 	{
-		std::cout << direct_x_11_base::hooks::DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
-		std::cout << direct_x_11_base::hooks::IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
-		std::cout << direct_x_11_base::hooks::IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
+		std::cout << _hooks.DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
+		std::cout << _hooks.IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
+		std::cout << _hooks.IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
 
 		ATTACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		ATTACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);
@@ -347,6 +321,6 @@ namespace direct_x_11_base
 	{
 		DETACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		DETACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);
-		DETACH_HOOK(o_wnd_proc_handler, hk_wnd_proc);
+		DETACH_HOOK(_hooks.o_wnd_proc_handler, hk_wnd_proc);
 	}
 }
