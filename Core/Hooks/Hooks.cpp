@@ -2,7 +2,6 @@
 
 namespace direct_x_11_base
 {
-
 	hooks g_hooks;
 
 	//dxgi.dll Function offsets
@@ -24,28 +23,40 @@ namespace direct_x_11_base
 
 	//Note: Those Offsets might break after Windows Updates so be prepare to update those manually or find a way to automaticly update them, since signatures also break easily
 	const static std::uintptr_t g_dxgi_base_address = reinterpret_cast<std::uintptr_t>(GetModuleHandleA("dxgi.dll"));
-	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0;	//sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
-	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40;//sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
+	const static std::uintptr_t g_offset_IDXGISwapChain_Present = g_dxgi_base_address + 0x15E0;
+	//sig "48 89 5C 24 10 48 89 74 24 20 55 57 41 56"
+	const static std::uintptr_t g_offset_IDXGISwapChain_ResizeBuffers = g_dxgi_base_address + 0x22F40;
+	//sig "48 8B C4 55 41 54 41 55 41 56 41 57 48 8D 68 B1 48 81 EC C0"
 
 	// int64_t __fastcall IDXGISwapChain_Present(IDXGISwapChain* this, unsigned int SyncInterval, unsigned int Flags)
-	using tIDXGISwapChain_Present = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int SyncInterval,unsigned int Flags);
-	tIDXGISwapChain_Present o_IDXGISwapChain_Present = reinterpret_cast<tIDXGISwapChain_Present>(g_offset_IDXGISwapChain_Present);
+	using tIDXGISwapChain_Present = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int SyncInterval,
+	                                                     unsigned int Flags);
+	tIDXGISwapChain_Present o_IDXGISwapChain_Present = reinterpret_cast<tIDXGISwapChain_Present>(
+		g_offset_IDXGISwapChain_Present);
 
 	// int64_t __fastcall IDXGISwapChain::ResizeBuffers(IDXGISwapChain* this, unsigned int BufferCount, unsigned int Width, unsigned int Height, DXGI_FORMAT NewFormat, unsigned int SwapChainFlags)
-	using tIDXGISwapChain_ResizeBuffers = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int BufferCount,unsigned int Width, unsigned int Height,
+	using tIDXGISwapChain_ResizeBuffers = int64_t(__fastcall*)(IDXGISwapChain* this_ptr, unsigned int BufferCount,
+	                                                           unsigned int Width, unsigned int Height,
 	                                                           DXGI_FORMAT NewFormat, unsigned int SwapChainFlags);
-	tIDXGISwapChain_ResizeBuffers o_IDXGISwapChain_ResizeBuffers = reinterpret_cast<tIDXGISwapChain_ResizeBuffers>(g_offset_IDXGISwapChain_ResizeBuffers);
+	tIDXGISwapChain_ResizeBuffers o_IDXGISwapChain_ResizeBuffers = reinterpret_cast<tIDXGISwapChain_ResizeBuffers>(
+		g_offset_IDXGISwapChain_ResizeBuffers);
 
 	//int64_t __fastcall ID3D11DeviceContext::DrawIndexed(ID3D11DeviceContext* pContext, unsigned int IndexCount,unsigned int StartIndexLocation,int  BaseVertexLocation)
-	using  tID3D11DeviceContext_DrawIndexed = int64_t(__fastcall*)(ID3D11DeviceContext* pContext, unsigned int IndexCount, unsigned int StartIndexLocation, int BaseVertexLocation);
+	using tID3D11DeviceContext_DrawIndexed = int64_t(__fastcall*)(ID3D11DeviceContext* pContext,
+	                                                              unsigned int IndexCount,
+	                                                              unsigned int StartIndexLocation,
+	                                                              int BaseVertexLocation);
 	tID3D11DeviceContext_DrawIndexed oID3D11DeviceContext_DrawIndexed = nullptr;
 
 	//int64_t __fastcall* ID3D11DeviceContext::DrawIndexedInstanced(ID3D11DeviceContext* pContext, unsigned int IndexCountPerInstance,unsigned int InstanceCount,unsigned int StartIndexLocation,int  BaseVertexLocation,unsigned int StartInstanceLocation)
-	using tID3D11DeviceContext_DrawIndexedInstanced = int64_t(__fastcall*)(ID3D11DeviceContext* pContext, unsigned int IndexCountPerInstance, unsigned int InstanceCount, unsigned int StartIndexLocation, int  BaseVertexLocation, unsigned int StartInstanceLocation);
+	using tID3D11DeviceContext_DrawIndexedInstanced = int64_t(__fastcall*)(
+		ID3D11DeviceContext* pContext, unsigned int IndexCountPerInstance, unsigned int InstanceCount,
+		unsigned int StartIndexLocation, int BaseVertexLocation, unsigned int StartInstanceLocation);
 	tID3D11DeviceContext_DrawIndexedInstanced oID3D11DeviceContext_DrawIndexedInstanced = nullptr;
 
 	// Universal Wnd Process hook, should stop most game of draging your mouse to the middle of the screen or transmit keystrokes to the gamme
-	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND arg_hwnd, const unsigned int arg_umsg, const WPARAM arg_wparam, const LPARAM arg_lparam)
+	LRESULT CALLBACK hooks::hk_wnd_proc(const HWND arg_hwnd, const unsigned int arg_umsg, const WPARAM arg_wparam,
+	                                    const LPARAM arg_lparam)
 	{
 		// Declare a POINT structure to store mouse cursor position
 		POINT l_pos;
@@ -78,21 +89,34 @@ namespace direct_x_11_base
 		return CallWindowProc(g_hooks.o_wnd_proc_handler, arg_hwnd, arg_umsg, arg_wparam, arg_lparam);
 	}
 
-	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced(ID3D11DeviceContext* arg_pContext,unsigned int arg_IndexCountPerInstance, unsigned int arg_InstanceCount, unsigned int arg_StartIndexLocation, int  arg_BaseVertexLocation, unsigned int arg_StartInstanceLocation)
+	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced(
+		ID3D11DeviceContext* arg_pContext, unsigned int arg_IndexCountPerInstance, unsigned int arg_InstanceCount,
+		unsigned int arg_StartIndexLocation, int arg_BaseVertexLocation, unsigned int arg_StartInstanceLocation)
 	{
 		//can be used for video games cheat to do direct X chams incase DrawIndexed doesnt work
-		
-		return oID3D11DeviceContext_DrawIndexedInstanced(arg_pContext,arg_IndexCountPerInstance, arg_InstanceCount, arg_StartIndexLocation, arg_BaseVertexLocation, arg_StartInstanceLocation);
+
+		return oID3D11DeviceContext_DrawIndexedInstanced(arg_pContext, arg_IndexCountPerInstance, arg_InstanceCount,
+		                                                 arg_StartIndexLocation, arg_BaseVertexLocation,
+		                                                 arg_StartInstanceLocation);
 	}
 
-	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* arg_pContext, unsigned int arg_IndexCount, unsigned int arg_StartIndexLocation,int arg_BaseVertexLocation)
+	int64_t __fastcall hooks::hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* arg_pContext,
+	                                                             unsigned int arg_IndexCount,
+	                                                             unsigned int arg_StartIndexLocation,
+	                                                             int arg_BaseVertexLocation)
 	{
 		//can be used to applied textures or shaders or other property changes to object in the application
 
-		return oID3D11DeviceContext_DrawIndexed(arg_pContext,arg_IndexCount, arg_StartIndexLocation, arg_BaseVertexLocation);
+		return oID3D11DeviceContext_DrawIndexed(arg_pContext, arg_IndexCount, arg_StartIndexLocation,
+		                                        arg_BaseVertexLocation);
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* arg_p_swapchain,const unsigned int arg_buffer_count,const unsigned int arg_width, const unsigned int arg_height,const DXGI_FORMAT arg_new_format,const unsigned int arg_swap_chain_flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* arg_p_swapchain,
+	                                                             const unsigned int arg_buffer_count,
+	                                                             const unsigned int arg_width,
+	                                                             const unsigned int arg_height,
+	                                                             const DXGI_FORMAT arg_new_format,
+	                                                             const unsigned int arg_swap_chain_flags)
 	{
 		// Invalidate ImGui's device objects to prepare for resizing
 		ImGui_ImplDX11_InvalidateDeviceObjects();
@@ -105,7 +129,8 @@ namespace direct_x_11_base
 		}
 
 		// Call the original IDXGISwapChain::ResizeBuffers function and store its return value
-		const int64_t r_result = o_IDXGISwapChain_ResizeBuffers(arg_p_swapchain, arg_buffer_count, arg_width, arg_height, arg_new_format,
+		const int64_t r_result = o_IDXGISwapChain_ResizeBuffers(arg_p_swapchain, arg_buffer_count, arg_width,
+		                                                        arg_height, arg_new_format,
 		                                                        arg_swap_chain_flags);
 
 		// Recreate ImGui's device objects after resizing
@@ -115,7 +140,9 @@ namespace direct_x_11_base
 		return r_result;
 	}
 
-	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* arg_p_swapchain, const unsigned int arg_sync_interval,const unsigned int arg_flags)
+	int64_t __fastcall hooks::hk_idxgi_swap_chain_present(IDXGISwapChain* arg_p_swapchain,
+	                                                      const unsigned int arg_sync_interval,
+	                                                      const unsigned int arg_flags)
 	{
 		// Check if ImGui is initialized
 		if (!g_hooks.m_is_imgui_initialized)
@@ -123,11 +150,14 @@ namespace direct_x_11_base
 			g_hooks.m_is_imgui_initialized = true; // Only initialize ImGui once
 
 			// Get the device associated with the swap chain
-			if (SUCCEEDED(arg_p_swapchain->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_hooks.m_ptr_device))))
+			if (SUCCEEDED(
+				arg_p_swapchain->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_hooks.m_ptr_device))))
 			{
 				// Gets the device pointer of the swap chain for later usage
-				arg_p_swapchain->GetDevice(__uuidof(g_hooks.m_ptr_device), reinterpret_cast<void**>(&g_hooks.m_ptr_device));
-				std::cout << g_hooks.DEVICE_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(g_hooks.m_ptr_device))
+				arg_p_swapchain->GetDevice(__uuidof(g_hooks.m_ptr_device),
+				                           reinterpret_cast<void**>(&g_hooks.m_ptr_device));
+				std::cout << g_hooks.DEVICE_CONSOLE_TEXT << std::format(
+						"{:#x}", reinterpret_cast<std::uintptr_t>(g_hooks.m_ptr_device))
 					<< std::endl;
 
 				//Get pointer of te context of the swap chain
@@ -139,14 +169,20 @@ namespace direct_x_11_base
 				auto p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(g_hooks.m_ptr_context);
 				p_device_context_v_table = reinterpret_cast<std::uintptr_t*>(p_device_context_v_table[0]);
 
-				oID3D11DeviceContext_DrawIndexed = reinterpret_cast<tID3D11DeviceContext_DrawIndexed>(p_device_context_v_table[12]);
-				oID3D11DeviceContext_DrawIndexedInstanced = reinterpret_cast<tID3D11DeviceContext_DrawIndexedInstanced>(p_device_context_v_table[20]);
+				oID3D11DeviceContext_DrawIndexed = reinterpret_cast<tID3D11DeviceContext_DrawIndexed>(
+					p_device_context_v_table[12]);
+				oID3D11DeviceContext_DrawIndexedInstanced = reinterpret_cast<tID3D11DeviceContext_DrawIndexedInstanced>(
+					p_device_context_v_table[20]);
 
-				std::cout << g_hooks.ID3D11DEVICECONTEXT_DRAWINDEXED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexed)) << std::endl;
-				std::cout << g_hooks.ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT << std::format("{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexedInstanced)) << std::endl;
+				std::cout << g_hooks.ID3D11DEVICECONTEXT_DRAWINDEXED_CONSOLE_TEXT << std::format(
+					"{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexed)) << std::endl;
+				std::cout << g_hooks.ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT << std::format(
+					"{:#x}", reinterpret_cast<std::uintptr_t>(oID3D11DeviceContext_DrawIndexedInstanced)) << std::endl;
 
-				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexed, direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexed);
-				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexedInstanced, direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced);
+				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexed,
+				            direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexed);
+				ATTACH_HOOK(oID3D11DeviceContext_DrawIndexedInstanced,
+				            direct_x_11_base::hooks::hk_ID3D11DeviceContext_DrawIndexedInstanced);
 			}
 
 			// Create an ImGui context
@@ -248,7 +284,8 @@ namespace direct_x_11_base
 			}
 
 			// Creates a render target view for the back buffer
-			g_hooks.m_h_result_code = g_hooks.m_ptr_device->CreateRenderTargetView(back_buffer, nullptr, &g_hooks.m_render_target_view);
+			g_hooks.m_h_result_code = g_hooks.m_ptr_device->CreateRenderTargetView(
+				back_buffer, nullptr, &g_hooks.m_render_target_view);
 			back_buffer->Release();
 			if (FAILED(g_hooks.m_h_result_code))
 			{
@@ -306,8 +343,10 @@ namespace direct_x_11_base
 	void hooks::init_hooks()
 	{
 		std::cout << g_hooks.DXGI_IMAGE_BASE_CONSOLE_TEXT << std::format("{:#x}", g_dxgi_base_address) << std::endl;
-		std::cout << g_hooks.IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
-		std::cout << g_hooks.IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format("{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
+		std::cout << g_hooks.IDXGI_SWAPCHAIN_PRESENT_CONSOLE_TEXT << std::format(
+			"{:#x}", g_offset_IDXGISwapChain_Present) << std::endl;
+		std::cout << g_hooks.IDXGI_SWAPCHAIN_RESIZEBUFFERS_CONSOLE_TEXT << std::format(
+			"{:#x}", g_offset_IDXGISwapChain_ResizeBuffers) << std::endl;
 
 		ATTACH_HOOK(o_IDXGISwapChain_Present, direct_x_11_base::hooks::hk_idxgi_swap_chain_present);
 		ATTACH_HOOK(o_IDXGISwapChain_ResizeBuffers, direct_x_11_base::hooks::hk_idxgi_swap_chain_resize_buffers);

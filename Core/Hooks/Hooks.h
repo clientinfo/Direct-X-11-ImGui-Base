@@ -2,29 +2,38 @@
 
 namespace direct_x_11_base
 {
-	
 	class hooks
 	{
-
 	public:
-
 		//Macro to simplify Function Hooking/Unhooking
-		#define ATTACH_HOOK(original, hook) (DetourTransactionBegin(), DetourUpdateThread(GetCurrentThread()), DetourAttach((LPVOID*)&(original), (LPVOID)(hook)), DetourTransactionCommit())
-		#define DETACH_HOOK(original, hook) (DetourTransactionBegin(), DetourUpdateThread(GetCurrentThread()), DetourDetach((LPVOID*)&(original), (LPVOID)(hook)), DetourTransactionCommit())
+#define ATTACH_HOOK(original, hook) (DetourTransactionBegin(), DetourUpdateThread(GetCurrentThread()), DetourAttach((LPVOID*)&(original), (LPVOID)(hook)), DetourTransactionCommit())
+#define DETACH_HOOK(original, hook) (DetourTransactionBegin(), DetourUpdateThread(GetCurrentThread()), DetourDetach((LPVOID*)&(original), (LPVOID)(hook)), DetourTransactionCommit())
 
 		// This is a macro that calculates a depth bias value for DirectX 32-bit floating-point format.
 		// It's used to convert depth bias from a float to a format compatible with DXGI.
-		#define DEPTH_BIAS_D32_FLOAT(d) (d/(1/pow(2,23)))
+#define DEPTH_BIAS_D32_FLOAT(d) (d/(1/pow(2,23)))
 
 		static void init_hooks();
 		static void unhook();
 
 	protected:
-		static int64_t __fastcall hk_idxgi_swap_chain_present(IDXGISwapChain* arg_p_swapchain, unsigned int arg_sync_interval, unsigned int arg_flags);
-		static int64_t __fastcall hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* arg_p_swapchain, unsigned int arg_buffer_count, unsigned int arg_width, unsigned int arg_height, DXGI_FORMAT arg_new_format, unsigned int arg_swap_chain_flags);
-		static LRESULT CALLBACK hk_wnd_proc(const HWND arg_hwnd, const UINT arg_umsg, const WPARAM arg_wparam, const LPARAM arg_lparam);
-		static int64_t __fastcall hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* arg_pContext, unsigned int arg_IndexCount, unsigned int arg_StartIndexLocation, int arg_BaseVertexLocation);
-		static int64_t __fastcall hk_ID3D11DeviceContext_DrawIndexedInstanced(ID3D11DeviceContext* arg_pContext, unsigned int arg_IndexCountPerInstance, unsigned int arg_InstanceCount, unsigned int arg_StartIndexLocation, int  arg_BaseVertexLocation, unsigned int arg_StartInstanceLocation);
+		static int64_t __fastcall hk_idxgi_swap_chain_present(IDXGISwapChain* arg_p_swapchain,
+		                                                      unsigned int arg_sync_interval, unsigned int arg_flags);
+		static int64_t __fastcall hk_idxgi_swap_chain_resize_buffers(IDXGISwapChain* arg_p_swapchain,
+		                                                             unsigned int arg_buffer_count,
+		                                                             unsigned int arg_width, unsigned int arg_height,
+		                                                             DXGI_FORMAT arg_new_format,
+		                                                             unsigned int arg_swap_chain_flags);
+		static LRESULT CALLBACK hk_wnd_proc(const HWND arg_hwnd, const UINT arg_umsg, const WPARAM arg_wparam,
+		                                    const LPARAM arg_lparam);
+		static int64_t __fastcall hk_ID3D11DeviceContext_DrawIndexed(ID3D11DeviceContext* arg_pContext,
+		                                                             unsigned int arg_IndexCount,
+		                                                             unsigned int arg_StartIndexLocation,
+		                                                             int arg_BaseVertexLocation);
+		static int64_t __fastcall hk_ID3D11DeviceContext_DrawIndexedInstanced(
+			ID3D11DeviceContext* arg_pContext, unsigned int arg_IndexCountPerInstance, unsigned int arg_InstanceCount,
+			unsigned int arg_StartIndexLocation, int arg_BaseVertexLocation, unsigned int arg_StartInstanceLocation);
+
 	private:
 		// Number of viewports being used
 		inline static unsigned int g_num_of_view_ports = 1;
@@ -36,7 +45,8 @@ namespace direct_x_11_base
 		std::string DEVICE_CONSOLE_TEXT = "[+] Device: ";
 		std::string CONTEXT_CONSOLE_TEXT = "[+] Context: ";
 		std::string ID3D11DEVICECONTEXT_DRAWINDEXED_CONSOLE_TEXT = "[+] ID3D11DeviceContext::DrawIndexed: ";
-		std::string ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT = "[+] ID3D11DeviceContext::DrawIndexedInstanced: ";
+		std::string ID3D11DEVICECONTEXT_DRAWINDEXEDINSTANCED_CONSOLE_TEXT =
+			"[+] ID3D11DeviceContext::DrawIndexedInstanced: ";
 		std::string FAILED_TO_GET_BACK_BUFFER_CONSOLE_TEXT = "[-] Failed to get back_buffer";
 		std::string FAILED_TO_GET_RENDER_TARGET_CONSOLE_TEXT = "[-] Failed to get RenderTarget";
 
@@ -92,7 +102,5 @@ namespace direct_x_11_base
 		// An int64_t variable used to store HRESULT error codes.
 		// HRESULT is a standard error code in Windows programming.
 		int64_t m_h_result_code = 0;
-
-
 	} extern g_hooks;
 }
