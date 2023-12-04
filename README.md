@@ -8,6 +8,9 @@ The project is well-commented to guide you through the code.
 
 This project is provided under the MIT License. Feel free to use and modify it as needed, but please credit the original authors.
 
+## IMPORTANT
+Stuff will only work on Windows 10 and only on x64 Processes
+
 ## Project Structure
 
 - `Includes.h`: Contains necessary include statements and defines.
